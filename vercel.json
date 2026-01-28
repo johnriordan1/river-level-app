@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/:match*",
-      "destination": "https://waterlevel.ie/:match*"
+      "source": "/api/:path*",
+      "destination": "/api/proxy"
     }
   ]
 }
