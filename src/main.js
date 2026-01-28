@@ -128,6 +128,8 @@ function renderMonitoredList() {
   // Removed per user request
 }
 
+import { requestWakeLock, releaseWakeLock } from './utils/wakeLock.js';
+
 // Actions
 function toggleMonitor(station) {
   // Start Audio Context on first interaction
@@ -146,6 +148,14 @@ function toggleMonitor(station) {
   } else {
     monitoredStations.add(ref);
   }
+
+  // Wake Lock Logic
+  if (monitoredStations.size > 0) {
+    requestWakeLock();
+  } else {
+    releaseWakeLock();
+  }
+
   localStorage.setItem('monitoredStations', JSON.stringify(Array.from(monitoredStations)));
 
   // Re-render main list to update button state
