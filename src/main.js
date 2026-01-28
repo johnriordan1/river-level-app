@@ -11,6 +11,44 @@ let stationDataCache = {}; // { stationRef: { value: 1.2, timestamp: ... } }
 // DOM Elements
 const stationListEl = document.getElementById('station-list');
 const alarmDisplay = document.getElementById('alarm-display');
+const installBtn = document.getElementById('install-btn');
+
+// PWA Install Logic
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the mini-infobar from appearing on mobile
+  e.preventDefault();
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+  // Update UI notify the user they can install the PWA
+  if (installBtn) {
+    installBtn.style.display = 'inline-block';
+  }
+});
+
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    // Hide the app provided install promotion
+    installBtn.style.display = 'none';
+    // Show the install prompt
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response to the install prompt: ${outcome}`);
+      deferredPrompt = null;
+    }
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  // Hide the app-provided install promotion
+  if (installBtn) installBtn.style.display = 'none';
+  // Clear the deferredPrompt so it can be garbage collected
+  deferredPrompt = null;
+  console.log('PWA was installed');
+});
 
 // Init
 async function init() {
