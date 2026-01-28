@@ -2,11 +2,27 @@
  * OPW Water Level API Client
  */
 
-const STATIONS_URL = '/api/geojson/';
-const LATEST_READINGS_URL = '/api/geojson/latest/';
+const IS_PROD = import.meta.env.PROD;
+
+// Helper to construct URL
+function getUrl(path) {
+    if (IS_PROD) {
+        // In production, use the serverless proxy
+        // path comes in as '/api/geojson/' or similar
+        // We strip '/api/' and pass the rest as 'path' query param
+        const cleanPath = path.replace(/^\/api\//, '');
+        return `/api/proxy?path=${cleanPath}`;
+    }
+    // In dev, use the vite proxy path directly
+    return path;
+}
+
+const STATIONS_PATH = '/api/geojson/';
+const LATEST_READINGS_PATH = '/api/geojson/latest/';
 
 // Helper to fetch JSON
-async function fetchJson(url) {
+async function fetchJson(path) {
+    const url = getUrl(path);
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
@@ -20,7 +36,7 @@ async function fetchJson(url) {
  */
 export async function fetchStations() {
     try {
-        const data = await fetchJson(STATIONS_URL);
+        const data = await fetchJson(STATIONS_PATH);
         return data.features || [];
     } catch (error) {
         console.error('Error fetching stations:', error);
@@ -34,9 +50,8 @@ export async function fetchStations() {
  */
 export async function fetchLatestReadings() {
     try {
-        const data = await fetchJson(LATEST_READINGS_URL);
+        const data = await fetchJson(LATEST_READINGS_PATH);
         // Returns a FeatureCollection where features have properties like { station_ref, value, datetime, ... }
-        // Note: The structure might be slightly different than stations list, usually properties have the data.
         return data.features || [];
     } catch (error) {
         console.error('Error fetching latest readings:', error);
@@ -48,9 +63,9 @@ export async function fetchLatestReadings() {
  * Fetch latest sensor data for a station (Historical/Detailed)
  */
 export async function fetchStationData(stationId, sensorRef = '0001') {
-    const url = `/api/data/month/${stationId}_${sensorRef}.json`;
+    const path = `/api/data/month/${stationId}_${sensorRef}.json`;
     try {
-        const data = await fetchJson(url);
+        const data = await fetchJson(path);
         return data; // { station_id, sensor_ref, data: [...] }
     } catch (error) {
         console.warn(`Could not fetch data for station ${stationId}`, error);
