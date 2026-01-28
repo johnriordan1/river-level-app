@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPW Real Time River Level Alert</title>
+  <meta name="description" content="Monitor river levels and get alerts for rising water." />
+</head>
+
+<body>
+  <div id="app">
+    <div class="container">
+      <header class="header">
+        <h1 class="title" style="text-align: center;">OPW Real Time River Level Alert</h1>
+        <p style="text-align: center; margin-top: 0.5rem; font-weight: 500;">Current alarm level is set to 0.5m</p>
+      </header>
+
+      <div id="alarm-display" style="text-align: center; margin-bottom: 1rem; min-height: 1.5rem;"></div>
+
+      <!-- Search removed per user request -->
+
+      <div id="station-list">
+        <!-- Search results / All stations -->
+        <p style="color: var(--text-secondary); text-align: center;">Loading stations...</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
