@@ -209,9 +209,10 @@ function renderStationList() {
     // Safe access to properties
     const name = (s.properties.name || '').toLowerCase();
     const ref = (s.properties.ref || '').toLowerCase();
+    const river = (s.properties.river || '').toLowerCase();
 
-    // Check match
-    return name.includes(query) || ref.includes(query);
+    // Check match (Name, Ref, or River)
+    return name.includes(query) || ref.includes(query) || river.includes(query);
   });
 
   if (filtered.length === 0) {
