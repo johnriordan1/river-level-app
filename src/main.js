@@ -347,7 +347,6 @@ function checkAlarms() {
     if (alarmDisplay) {
       alarmDisplay.innerHTML = `<div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; font-weight: bold; border: 2px solid #ef4444;">
               ${alarmMsg}
-              <div style="font-size:0.8rem; margin-top:0.5rem; color:#7f1d1d">Press 'Stop Monitoring' to silence.</div>
             </div>`;
     }
 

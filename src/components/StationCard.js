@@ -26,26 +26,41 @@ export function createStationCard(station, isMonitored, onToggleMonitor, thresho
                 <div class="level-indicator" id="level-${stationRef}" style="font-size: 1.5rem;">--</div>
             </div>
 
-            <div style="text-align: center;">
+            <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
                  <label style="font-size: 0.75rem; color: #64748b; display: block;">Alarm Limit (m)</label>
-                 <input type="number" class="threshold-input" 
-                    value="${threshold}" min="0.5" max="5.0" step="0.1" 
-                    style="width: 70px; padding: 0.25rem; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; font-size: 0.9rem;">
+                 <div style="display: flex; align-items: center; gap: 0.5rem;">
+                     <input type="number" class="threshold-input" 
+                        value="${threshold}" min="0.5" max="5.0" step="0.1" 
+                        style="width: 90px; padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; font-size: 1.1rem;">
+                     <button class="confirm-btn" style="display: none; background-color: #22c55e; color: white; border: none; border-radius: 4px; padding: 0.5rem; cursor: pointer;">
+                        ✓
+                     </button>
+                 </div>
             </div>
         </div>
 
         <div style="text-align: center; margin-top: 1rem;">
-            <button class="btn btn-sm action-btn" style="background-color: #ef4444; color: white; padding: 0.3rem 0.8rem; font-size: 0.85rem;">
+            <button class="btn btn-sm action-btn" style="background-color: #ef4444; color: white; padding: 0.8rem 2rem; font-size: 1rem; width: 80%;">
                 Stop Monitoring
             </button>
         </div>
         `;
 
-        // Threshold Change Listener
+        // Threshold Change Logic
         const input = div.querySelector('.threshold-input');
-        input.addEventListener('change', (e) => {
-            const newVal = parseFloat(e.target.value);
+        const confirmBtn = div.querySelector('.confirm-btn');
+
+        input.addEventListener('input', () => {
+            confirmBtn.style.display = 'block';
+            confirmBtn.innerHTML = `Confirm ${input.value}m`;
+            confirmBtn.style.fontSize = '0.8rem';
+            confirmBtn.style.padding = '0.3rem 0.5rem';
+        });
+
+        confirmBtn.addEventListener('click', () => {
+            const newVal = parseFloat(input.value);
             if (onThresholdChange) onThresholdChange(station, newVal);
+            confirmBtn.style.display = 'none';
         });
 
     } else {
