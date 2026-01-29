@@ -123,13 +123,16 @@ function renderAll() {
 }
 
 // 1. Monitored List (Top)
+// 1. Monitored List (Top)
 function renderMonitoredList() {
+  const section = document.getElementById('monitored-section');
   monitoredListEl.innerHTML = '';
 
   if (monitoredStations.size === 0) {
-    noMonitoredMsg.style.display = 'block';
+    if (section) section.style.display = 'none';
   } else {
-    noMonitoredMsg.style.display = 'none';
+    // Show section
+    if (section) section.style.display = 'block';
 
     monitoredStations.forEach((details, ref) => {
       const station = allStations.find(s => s.properties.ref === ref);
