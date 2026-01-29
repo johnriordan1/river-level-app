@@ -1,15 +1,15 @@
 import './style.css';
+import { stationMetadata } from './api/station_metadata.js';
 import { fetchStations, fetchStationData, fetchLatestReadings } from './api/opw.js';
 import { alarmSystem } from './utils/audio.js';
 import { createStationCard, updateStationLevelDOM } from './components/StationCard.js';
+import { requestWakeLock, releaseWakeLock } from './utils/wakeLock.js';
 
-// State
 // State
 let allStations = [];
 // Map<ref, { threshold: number }>
 let monitoredStations = new Map();
 let stationDataCache = {};
-let searchQuery = "";
 
 // Load State from LocalStorage
 try {
@@ -21,11 +21,6 @@ try {
       // Handle if it was already an object array (future proofing)
       else if (ref.id) monitoredStations.set(ref.id, { threshold: ref.threshold || 1.0 });
     });
-  } else {
-    // Should be array of entries if we saved Map as array previously, 
-    // but simplified: Let's stick to array of objects for storage
-    // Actually, to make Maps JSON serializable we usually convert to array of entries.
-    // Let's assume input is Array of Objects for the new format.
   }
 } catch (e) {
   console.log("State reset");
@@ -34,12 +29,13 @@ try {
 // DOM Elements
 const stationListEl = document.getElementById('station-list');
 const monitoredListEl = document.getElementById('monitored-list');
-const noMonitoredMsg = document.getElementById('no-monitored-msg');
+const monitoredSection = document.getElementById('monitored-section');
 const searchInput = document.getElementById('station-search');
+const countyFilter = document.getElementById('county-filter');
 const alarmDisplay = document.getElementById('alarm-display');
 const installBtn = document.getElementById('install-btn');
 
-// --- PWA Install Logic (Identical, omitted for brevity but preserved) ---
+// --- PWA Install Logic ---
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -70,6 +66,16 @@ async function init() {
       fetchLatestReadings()
     ]);
 
+    // MERGE METADATA (County/River)
+    stations.forEach(s => {
+      const ref = s.properties.ref;
+      const meta = stationMetadata.find(m => m.ref === ref);
+      if (meta) {
+        s.properties.county = meta.county || "";
+        s.properties.river = meta.river || "";
+      }
+    });
+
     // Sort alphabetically by Name
     stations.sort((a, b) => {
       const nameA = a.properties.name || a.properties.ref || '';
@@ -78,6 +84,9 @@ async function init() {
     });
 
     allStations = stations;
+
+    // Populate County Dropdown
+    populateCounties();
 
     // Process Latest Data
     processLatestData(latestData);
@@ -93,6 +102,25 @@ async function init() {
   // Start Polling
   monitorLoop();
   setInterval(monitorLoop, 5000);
+}
+
+function populateCounties() {
+  if (!countyFilter) return;
+
+  const counties = new Set();
+  allStations.forEach(s => {
+    if (s.properties.county) counties.add(s.properties.county);
+  });
+
+  const sorted = Array.from(counties).sort();
+
+  sorted.forEach(c => {
+    if (!c) return; // Skip empty
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.innerText = c;
+    countyFilter.appendChild(opt);
+  });
 }
 
 // Data Processing
@@ -123,16 +151,14 @@ function renderAll() {
 }
 
 // 1. Monitored List (Top)
-// 1. Monitored List (Top)
 function renderMonitoredList() {
-  const section = document.getElementById('monitored-section');
   monitoredListEl.innerHTML = '';
 
   if (monitoredStations.size === 0) {
-    if (section) section.style.display = 'none';
+    if (monitoredSection) monitoredSection.style.display = 'none';
   } else {
     // Show section
-    if (section) section.style.display = 'block';
+    if (monitoredSection) monitoredSection.style.display = 'block';
 
     monitoredStations.forEach((details, ref) => {
       const station = allStations.find(s => s.properties.ref === ref);
@@ -166,14 +192,18 @@ function renderStationList() {
   }
 
   // Filter: Exclude monitored stations AND match search query
-  const rawQuery = searchInput.value;
+  const rawQuery = searchInput ? searchInput.value : "";
   const query = (rawQuery || "").trim().toLowerCase();
+  const county = countyFilter ? countyFilter.value : "";
 
   const filtered = allStations.filter(s => {
     // If monitored, don't show in search list
     if (monitoredStations.has(s.properties.ref)) return false;
 
-    // Search Filter: If query empty, SHOW ALL
+    // 1. County Filter
+    if (county && s.properties.county !== county) return false;
+
+    // 2. Search Filter (if empty, show all in county)
     if (query.length === 0) return true;
 
     // Safe access to properties
@@ -270,10 +300,11 @@ if (countyFilter) {
   });
 }
 
-searchInput.addEventListener('input', () => {
-  renderStationList();
-});
-
+if (searchInput) {
+  searchInput.addEventListener('input', () => {
+    renderStationList();
+  });
+}
 
 // --- Monitoring & Alarm Logic ---
 async function monitorLoop() {
@@ -285,7 +316,6 @@ async function monitorLoop() {
     // Update DOM for monitored stations
     monitoredStations.forEach((_, ref) => {
       if (stationDataCache[ref]) {
-        // Pass true for isRising for now, or improve logic
         updateStationLevelDOM(ref, stationDataCache[ref].value, false);
       }
     });
@@ -313,10 +343,12 @@ function checkAlarms() {
 
   if (anyAlarmActive) {
     // Show Alarm
-    alarmDisplay.innerHTML = `<div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; font-weight: bold; border: 2px solid #ef4444;">
-          ${alarmMsg}
-          <div style="font-size:0.8rem; margin-top:0.5rem; color:#7f1d1d">Press 'Stop Monitoring' to silence.</div>
-        </div>`;
+    if (alarmDisplay) {
+      alarmDisplay.innerHTML = `<div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; font-weight: bold; border: 2px solid #ef4444;">
+              ${alarmMsg}
+              <div style="font-size:0.8rem; margin-top:0.5rem; color:#7f1d1d">Press 'Stop Monitoring' to silence.</div>
+            </div>`;
+    }
 
     // Play Sound
     if (alarmSystem.ctx && alarmSystem.ctx.state === 'suspended') {
@@ -325,11 +357,10 @@ function checkAlarms() {
     alarmSystem.start();
   } else {
     // Clear Alarm
-    alarmDisplay.innerHTML = '';
+    if (alarmDisplay) alarmDisplay.innerHTML = '';
     alarmSystem.stop();
   }
 }
 
-import { requestWakeLock, releaseWakeLock } from './utils/wakeLock.js';
-
+// Start
 init();
