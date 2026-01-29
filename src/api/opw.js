@@ -7,11 +7,10 @@ const IS_PROD = import.meta.env.PROD;
 // Helper to construct URL
 function getUrl(path) {
     if (IS_PROD) {
-        // In production, use the serverless proxy
-        // path comes in as '/api/geojson/' or similar
-        // We strip '/api/' and pass the rest as 'path' query param
+        // In production, use the absolute serverless proxy URL
+        // This allows 'npm run preview' or local builds to work by hitting the live proxy
         const cleanPath = path.replace(/^\/api\//, '');
-        return `/api/proxy?path=${cleanPath}`;
+        return `https://river-level-app.vercel.app/api/proxy?path=${cleanPath}`;
     }
     // In dev, use the vite proxy path directly
     return path;
