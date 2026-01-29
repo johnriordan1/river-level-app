@@ -147,10 +147,6 @@ function toggleMonitor(station) {
     monitoredStations.delete(ref);
   } else {
     monitoredStations.add(ref);
-    // Track Event: User is interested in this location
-    if (window.va) {
-      window.va('event', { name: 'Monitor_Station', data: { station: station.properties.name } });
-    }
   }
 
   // Wake Lock Logic
