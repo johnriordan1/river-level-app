@@ -12,6 +12,11 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
+    "@vercel/analytics": "^1.6.1",
     "vite-plugin-pwa": "^1.2.0"
   }
 }
