@@ -132,15 +132,8 @@ import { requestWakeLock, releaseWakeLock } from './utils/wakeLock.js';
 
 // Actions
 function toggleMonitor(station) {
-  // Start Audio Context on first interaction
-  if (alarmSystem.ctx && alarmSystem.ctx.state === 'suspended') {
-    alarmSystem.start();
-    setTimeout(() => alarmSystem.stop(), 100);
-  } else if (!alarmSystem.ctx) {
-    // Just in case it wasn't init yet
-    alarmSystem.start();
-    setTimeout(() => alarmSystem.stop(), 100);
-  }
+  // Silent unlock on first interaction
+  alarmSystem.unlock();
 
   const ref = station.properties.ref;
   if (monitoredStations.has(ref)) {

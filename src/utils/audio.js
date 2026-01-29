@@ -17,6 +17,20 @@ class AudioAlarm {
         }
     }
 
+    // Unlock without playing sound (for user interaction)
+    unlock() {
+        this.init();
+        if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+        }
+        // Play silent sound to satisfy iOS
+        const buffer = this.audioCtx.createBuffer(1, 1, 22050);
+        const source = this.audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(this.audioCtx.destination);
+        source.start(0);
+    }
+
     // Start the alarm
     start() {
         if (this.isPlaying) return;
