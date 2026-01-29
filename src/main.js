@@ -256,7 +256,7 @@ function toggleMonitor(station) {
     monitoredStations.delete(ref);
   } else {
     // ADD
-    monitoredStations.set(ref, { threshold: 1.0 }); // Default 1.0m
+    monitoredStations.set(ref, { threshold: 3 }); // Default 3m (User Request)
     // Clear search
     if (searchInput) searchInput.value = '';
   }

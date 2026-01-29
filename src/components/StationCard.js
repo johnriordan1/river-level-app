@@ -32,14 +32,14 @@ export function createStationCard(station, isMonitored, onToggleMonitor, thresho
                  <input type="number" class="threshold-input" 
                     value="${threshold}" min="0.5" max="5.0" step="0.1" 
                     style="width: 100%; max-width: 120px; padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; font-size: 1.1rem;">
-                 
-                 <button class="confirm-btn" style="display: none; width: 100%; max-width: 120px; margin-top: 0.5rem; background-color: #22c55e; color: white; border: none; border-radius: 4px; padding: 0.6rem 0; font-size: 0.9rem; font-weight: bold; cursor: pointer;">
-                    Confirm
-                 </button>
             </div>
         </div>
 
-        <div style="text-align: center; margin-top: 1rem;">
+        <div style="text-align: center; margin-top: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+            <button class="confirm-btn" style="display: none; background-color: #22c55e; color: white; padding: 0.8rem 2rem; font-size: 1rem; width: 80%; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                Confirm
+            </button> <!-- Moved here and styled to match Stop button -->
+            
             <button class="btn btn-sm action-btn" style="background-color: #ef4444; color: white; padding: 0.8rem 2rem; font-size: 1rem; width: 80%;">
                 Stop Monitoring
             </button>
