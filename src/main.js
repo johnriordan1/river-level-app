@@ -4,55 +4,64 @@ import { alarmSystem } from './utils/audio.js';
 import { createStationCard, updateStationLevelDOM } from './components/StationCard.js';
 
 // State
+// State
 let allStations = [];
-let monitoredStations = new Set(JSON.parse(localStorage.getItem('monitoredStations') || '[]'));
-let stationDataCache = {}; // { stationRef: { value: 1.2, timestamp: ... } }
+// Map<ref, { threshold: number }>
+let monitoredStations = new Map();
+let stationDataCache = {};
+let searchQuery = "";
+
+// Load State from LocalStorage
+try {
+  const raw = JSON.parse(localStorage.getItem('monitoredStations') || '[]');
+  if (Array.isArray(raw)) {
+    // Migration: Convert old array [ref, ref] to Map { ref: {threshold: 1.0} }
+    raw.forEach(ref => {
+      if (typeof ref === 'string') monitoredStations.set(ref, { threshold: 1.0 });
+      // Handle if it was already an object array (future proofing)
+      else if (ref.id) monitoredStations.set(ref.id, { threshold: ref.threshold || 1.0 });
+    });
+  } else {
+    // Should be array of entries if we saved Map as array previously, 
+    // but simplified: Let's stick to array of objects for storage
+    // Actually, to make Maps JSON serializable we usually convert to array of entries.
+    // Let's assume input is Array of Objects for the new format.
+  }
+} catch (e) {
+  console.log("State reset");
+}
 
 // DOM Elements
 const stationListEl = document.getElementById('station-list');
+const monitoredListEl = document.getElementById('monitored-list');
+const noMonitoredMsg = document.getElementById('no-monitored-msg');
+const searchInput = document.getElementById('station-search');
 const alarmDisplay = document.getElementById('alarm-display');
 const installBtn = document.getElementById('install-btn');
 
-// PWA Install Logic
+// --- PWA Install Logic (Identical, omitted for brevity but preserved) ---
 let deferredPrompt;
-
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent the mini-infobar from appearing on mobile
   e.preventDefault();
-  // Stash the event so it can be triggered later.
   deferredPrompt = e;
-  // Update UI notify the user they can install the PWA
-  if (installBtn) {
-    installBtn.style.display = 'inline-block';
-  }
+  if (installBtn) installBtn.style.display = 'inline-block';
 });
-
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
-    // Hide the app provided install promotion
     installBtn.style.display = 'none';
-    // Show the install prompt
     if (deferredPrompt) {
       deferredPrompt.prompt();
-      // Wait for the user to respond to the prompt
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response to the install prompt: ${outcome}`);
       deferredPrompt = null;
     }
   });
 }
-
 window.addEventListener('appinstalled', () => {
-  // Hide the app-provided install promotion
   if (installBtn) installBtn.style.display = 'none';
-  // Clear the deferredPrompt so it can be garbage collected
   deferredPrompt = null;
-  console.log('PWA was installed');
 });
 
-// Init
+// --- Init ---
 async function init() {
-  // Fetch initial list AND latest data
   renderLoading();
 
   try {
@@ -61,7 +70,7 @@ async function init() {
       fetchLatestReadings()
     ]);
 
-    // Sort alphabetically
+    // Sort alphabetically by Name
     stations.sort((a, b) => {
       const nameA = a.properties.name || a.properties.ref || '';
       const nameB = b.properties.name || b.properties.ref || '';
@@ -70,190 +79,248 @@ async function init() {
 
     allStations = stations;
 
-    // Process latest data into cache
-    latestData.forEach(feature => {
-      const props = feature.properties;
-      // We only want Staff Gauge level (Sensor 0001) for now
-      if ((props.station_id || props.station_ref) && props.sensor_ref === "0001") {
-        const ref = props.station_ref || props.station_id;
-        const val = parseFloat(props.value);
-        if (!isNaN(val)) {
-          stationDataCache[ref] = {
-            value: val,
-            timestamp: props.datetime
-          };
-        }
-      }
-    });
+    // Process Latest Data
+    processLatestData(latestData);
 
   } catch (e) {
     console.error("Init failed", e);
+    stationListEl.innerHTML = '<p style="text-align:center; color:red">Failed to load data.</p>';
   }
 
-  renderStationList(allStations);
+  // Initial Render
+  renderAll();
 
-  // Start Polling Loop
+  // Start Polling
   monitorLoop();
   setInterval(monitorLoop, 5000);
 }
 
-// Rendering
-function renderLoading() {
-  stationListEl.innerHTML = '<p style="text-align:center">Loading OPW Stations...</p>';
-}
-
-function renderStationList(stations) {
-  stationListEl.innerHTML = '';
-  if (stations.length === 0) {
-    stationListEl.innerHTML = '<p style="text-align:center">No stations found.</p>';
-    return;
-  }
-
-  stations.forEach(station => {
-    const ref = station.properties.ref;
-    const isMonitored = monitoredStations.has(ref);
-    // Only show unmonitored in the main list to avoid duplication if we wanted, 
-    // but showing all is fine. For clarity, let's show all.
-    const card = createStationCard(station, isMonitored, toggleMonitor);
-    stationListEl.appendChild(card);
-
-    // If we have cached data, update it
-    if (stationDataCache[ref]) {
-      updateStationLevelDOM(ref, stationDataCache[ref].value, false);
+// Data Processing
+function processLatestData(latestData) {
+  latestData.forEach(feature => {
+    const props = feature.properties;
+    if ((props.station_id || props.station_ref) && props.sensor_ref === "0001") {
+      const ref = props.station_ref || props.station_id;
+      const val = parseFloat(props.value);
+      if (!isNaN(val)) {
+        stationDataCache[ref] = {
+          value: val,
+          timestamp: props.datetime
+        };
+      }
     }
   });
 }
 
+// --- Rendering ---
+function renderLoading() {
+  stationListEl.innerHTML = '<p style="text-align:center">Loading OPW Stations...</p>';
+}
+
+function renderAll() {
+  renderMonitoredList();
+  renderStationList();
+}
+
+// 1. Monitored List (Top)
 function renderMonitoredList() {
-  // Removed per user request
-}
+  monitoredListEl.innerHTML = '';
 
-import { requestWakeLock, releaseWakeLock } from './utils/wakeLock.js';
-
-// Actions
-function toggleMonitor(station) {
-  // Silent unlock on first interaction
-  alarmSystem.unlock();
-
-  const ref = station.properties.ref;
-  if (monitoredStations.has(ref)) {
-    monitoredStations.delete(ref);
+  if (monitoredStations.size === 0) {
+    noMonitoredMsg.style.display = 'block';
   } else {
-    monitoredStations.add(ref);
-  }
+    noMonitoredMsg.style.display = 'none';
 
-  // Wake Lock Logic
-  if (monitoredStations.size > 0) {
-    requestWakeLock();
-  } else {
-    releaseWakeLock();
-  }
+    monitoredStations.forEach((details, ref) => {
+      const station = allStations.find(s => s.properties.ref === ref);
+      if (station) {
+        const card = createStationCard(
+          station,
+          true, // isMonitored
+          toggleMonitor,
+          details.threshold,
+          updateThreshold
+        );
+        monitoredListEl.appendChild(card);
 
-  localStorage.setItem('monitoredStations', JSON.stringify(Array.from(monitoredStations)));
-
-  // Re-render main list to update button state
-  renderStationList(allStations);
-}
-
-// Monitoring Logic
-async function monitorLoop() {
-  console.log('Checking levels...');
-  // Efficiently fetch all latest data in one go
-  try {
-    const latestData = await fetchLatestReadings();
-
-    // Update cache
-    latestData.forEach(feature => {
-      const props = feature.properties;
-      if ((props.station_id || props.station_ref) && props.sensor_ref === "0001") {
-        const ref = props.station_ref || props.station_id;
-        const val = parseFloat(props.value);
-        if (!isNaN(val)) {
-          // Check if this station is being monitored
-          if (monitoredStations.has(ref)) {
-            const oldVal = stationDataCache[ref] ? stationDataCache[ref].value : null;
-
-            stationDataCache[ref] = {
-              value: val,
-              timestamp: props.datetime
-            };
-
-            // Check High Level Alarm
-            // GLOBAL Threshold: 0.5m
-            if (val > 0.5) {
-              // Find station name
-              const station = allStations.find(s => s.properties.ref === ref);
-              const name = station ? station.properties.name : ref;
-              triggerAlarm(name, val);
-            }
-
-            // Update DOM
-            // Determine if rising (simple check vs old cache)
-            // Note: This loop runs every 60s, so oldVal is from 60s ago. 
-            // Real "rising" logic needs longer history, but for basic arrow:
-            const isRising = oldVal !== null && val > oldVal;
-            updateStationLevelDOM(ref, val, isRising);
-          } else {
-            // Update cache for non-monitored too, why not?
-            stationDataCache[ref] = {
-              value: val,
-              timestamp: props.datetime
-            };
-          }
+        // Update level immediately if we have it
+        if (stationDataCache[ref]) {
+          updateStationLevelDOM(ref, stationDataCache[ref].value, false);
         }
       }
     });
+  }
+}
+
+// 2. Search Results List (Bottom)
+// 2. Search Results List (Bottom)
+function renderStationList() {
+  stationListEl.innerHTML = '';
+
+  if (!allStations || allStations.length === 0) {
+    stationListEl.innerHTML = '<p style="text-align:center">No stations loaded.</p>';
+    return;
+  }
+
+  // Filter: Exclude monitored stations AND match search query
+  const query = (searchInput.value || "").trim().toLowerCase();
+
+  const filtered = allStations.filter(s => {
+    // If monitored, don't show in search list
+    if (monitoredStations.has(s.properties.ref)) return false;
+
+    // Search Filter
+    if (!query) return true;
+
+    // Safe access to properties
+    const name = (s.properties.name || '').toLowerCase();
+    const ref = (s.properties.ref || '').toLowerCase();
+
+    // Check match
+    return name.includes(query) || ref.includes(query);
+  });
+
+  if (filtered.length === 0) {
+    stationListEl.innerHTML = '<p style="text-align:center; color:#94a3b8">No matching stations found.</p>';
+    return;
+  }
+
+  // Limit rendering for performance (first 50 only)
+  const toRender = filtered.slice(0, 50);
+
+  toRender.forEach(station => {
+    const card = createStationCard(station, false, toggleMonitor);
+    stationListEl.appendChild(card);
+  });
+
+  if (filtered.length > 50) {
+    const moreMsg = document.createElement('p');
+    moreMsg.style.textAlign = 'center';
+    moreMsg.style.color = '#94a3b8';
+    moreMsg.style.fontSize = '0.8rem';
+    moreMsg.innerText = `...and ${filtered.length - 50} more. Keep typing to narrow down.`;
+    stationListEl.appendChild(moreMsg);
+  }
+}
+
+// --- Actions ---
+
+// Toggle Monitor (Add/Remove)
+function toggleMonitor(station) {
+  // Silent unlock audio
+  alarmSystem.unlock();
+
+  const ref = station.properties.ref;
+
+  if (monitoredStations.has(ref)) {
+    // REMOVE (Stop Alarm)
+    monitoredStations.delete(ref);
+    // If alarm was ringing for this one, silence it?
+    // Actually, we usually check all alarms. 
+    // But user said "The text box is then cleared" -> No, that's for adding.
+    // User said "The alarm is stopped by pressing the monitor button".
+    // So if we remove it, we should re-evaluate alarms.
+  } else {
+    // ADD
+    monitoredStations.set(ref, { threshold: 1.0 }); // Default 1.0m
+    // Clear search
+    searchInput.value = '';
+  }
+
+  persistState();
+  renderAll();
+
+  // Trigger wake lock check
+  if (monitoredStations.size > 0) requestWakeLock();
+  else releaseWakeLock();
+
+  // Re-check alarms immediately
+  checkAlarms();
+}
+
+// Update Threshold
+function updateThreshold(station, newVal) {
+  const ref = station.properties.ref;
+  if (monitoredStations.has(ref)) {
+    const data = monitoredStations.get(ref);
+    data.threshold = newVal;
+    monitoredStations.set(ref, data);
+    persistState();
+    // Re-check alarms immediately (in case new threshold triggers it)
+    checkAlarms();
+  }
+}
+
+function persistState() {
+  // Save Map as Array of objects: [{id, threshold}]
+  const storageFormat = [];
+  monitoredStations.forEach((val, key) => {
+    storageFormat.push({ id: key, threshold: val.threshold });
+  });
+  localStorage.setItem('monitoredStations', JSON.stringify(storageFormat));
+}
+
+// --- Search Listener ---
+searchInput.addEventListener('input', () => {
+  renderStationList();
+});
+
+
+// --- Monitoring & Alarm Logic ---
+async function monitorLoop() {
+  // console.log('Checking levels...');
+  try {
+    const latestData = await fetchLatestReadings();
+    processLatestData(latestData);
+
+    // Update DOM for monitored stations
+    monitoredStations.forEach((_, ref) => {
+      if (stationDataCache[ref]) {
+        // Pass true for isRising for now, or improve logic
+        updateStationLevelDOM(ref, stationDataCache[ref].value, false);
+      }
+    });
+
+    checkAlarms();
 
   } catch (e) {
     console.error("Monitor loop failed", e);
   }
 }
 
-// Deprecated individual fetch
-async function fetchAndProcess(station) {
-  // keeping for reference or explicit single-refresh if needed
-  // see monitorLoop for main logic
-}
+function checkAlarms() {
+  let anyAlarmActive = false;
+  let alarmMsg = "";
 
+  monitoredStations.forEach((settings, ref) => {
+    const data = stationDataCache[ref];
+    if (data && data.value >= settings.threshold) {
+      anyAlarmActive = true;
+      const station = allStations.find(s => s.properties.ref === ref);
+      const name = station ? station.properties.name : ref;
+      alarmMsg += `<div>⚠️ ${name} (${data.value.toFixed(2)}m) exceeds ${settings.threshold}m!</div>`;
+    }
+  });
 
+  if (anyAlarmActive) {
+    // Show Alarm
+    alarmDisplay.innerHTML = `<div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; font-weight: bold; border: 2px solid #ef4444;">
+          ${alarmMsg}
+          <div style="font-size:0.8rem; margin-top:0.5rem; color:#7f1d1d">Press 'Stop Monitoring' to silence.</div>
+        </div>`;
 
-function triggerAlarm(stationName, level) {
-  console.warn(`ALARM: ${stationName} is at ${level}`);
-  alarmDisplay.innerHTML = `<div style="background: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; font-weight: bold; border: 2px solid #ef4444;">
-    ⚠️ WARNING: ${stationName} is high (${level.toFixed(2)}m)!
-  </div>`;
-
-  // Play sound
-  if (alarmSystem.ctx && alarmSystem.ctx.state === 'suspended') {
-    alarmSystem.ctx.resume();
-  }
-  alarmSystem.start();
-
-  showStopButton();
-}
-
-function showStopButton() {
-  // Check if button already exists in the alarm display
-  let btn = document.getElementById('stop-alarm-btn');
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = 'stop-alarm-btn';
-    btn.className = 'btn btn-danger';
-    btn.textContent = 'STOP ALARM';
-    btn.style.marginTop = '0.5rem';
-    btn.style.backgroundColor = '#ef4444';
-    btn.style.color = 'white';
-
-    btn.addEventListener('click', () => {
-      alarmSystem.stop();
-      btn.remove();
-      alarmDisplay.innerHTML = ''; // Clear warning
-    });
-
-    // Append to the alarm display div
-    alarmDisplay.appendChild(document.createElement('br'));
-    alarmDisplay.appendChild(btn);
+    // Play Sound
+    if (alarmSystem.ctx && alarmSystem.ctx.state === 'suspended') {
+      alarmSystem.ctx.resume();
+    }
+    alarmSystem.start();
+  } else {
+    // Clear Alarm
+    alarmDisplay.innerHTML = '';
+    alarmSystem.stop();
   }
 }
+
+import { requestWakeLock, releaseWakeLock } from './utils/wakeLock.js';
 
 init();

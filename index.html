@@ -27,12 +27,27 @@
 
       <div id="alarm-display" style="text-align: center; margin-bottom: 1rem; min-height: 1.5rem;"></div>
 
-      <!-- Search removed per user request -->
+      <!-- Monitored Stations Section -->
+      <section id="monitored-section" style="margin-bottom: 2rem; display: none;">
+        <h2 style="font-size: 1.2rem; margin-bottom: 1rem; color: #1e293b; text-align: center;">Monitored Stations</h2>
+        <div id="monitored-list" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Monitored cards go here -->
+        </div>
+      </section>
 
-      <div id="station-list">
-        <!-- Search results / All stations -->
-        <p style="color: var(--text-secondary); text-align: center;">Loading stations...</p>
-      </div>
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 2rem 0;">
+
+      <!-- Search Section -->
+      <section id="search-section">
+        <h2 style="font-size: 1.2rem; margin-bottom: 1rem; color: #1e293b; text-align: center;">Find a Station</h2>
+        <input type="text" id="station-search" placeholder="Type to search stations..."
+          style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 1rem; font-size: 1rem;">
+
+        <div id="station-list">
+          <!-- Filtered list goes here -->
+          <p style="color: var(--text-secondary); text-align: center;">Loading stations...</p>
+        </div>
+      </section>
     </div>
     <script type="module" src="/src/main.js"></script>
 </body>
