@@ -26,16 +26,16 @@ export function createStationCard(station, isMonitored, onToggleMonitor, thresho
                 <div class="level-indicator" id="level-${stationRef}" style="font-size: 1.5rem;">--</div>
             </div>
 
-            <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+            <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; width: 50%;">
                  <label style="font-size: 0.75rem; color: #64748b; display: block;">Alarm Limit (m)</label>
-                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                     <input type="number" class="threshold-input" 
-                        value="${threshold}" min="0.5" max="5.0" step="0.1" 
-                        style="width: 90px; padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; font-size: 1.1rem;">
-                     <button class="confirm-btn" style="display: none; background-color: #22c55e; color: white; border: none; border-radius: 4px; padding: 0.5rem; cursor: pointer;">
-                        ✓
-                     </button>
-                 </div>
+                 
+                 <input type="number" class="threshold-input" 
+                    value="${threshold}" min="0.5" max="5.0" step="0.1" 
+                    style="width: 100%; max-width: 120px; padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; font-size: 1.1rem;">
+                 
+                 <button class="confirm-btn" style="display: none; width: 100%; max-width: 120px; margin-top: 0.5rem; background-color: #22c55e; color: white; border: none; border-radius: 4px; padding: 0.6rem 0; font-size: 0.9rem; font-weight: bold; cursor: pointer;">
+                    Confirm
+                 </button>
             </div>
         </div>
 
@@ -52,9 +52,7 @@ export function createStationCard(station, isMonitored, onToggleMonitor, thresho
 
         input.addEventListener('input', () => {
             confirmBtn.style.display = 'block';
-            confirmBtn.innerHTML = `Confirm ${input.value}m`;
-            confirmBtn.style.fontSize = '0.8rem';
-            confirmBtn.style.padding = '0.3rem 0.5rem';
+            confirmBtn.innerText = `Confirm ${input.value}m`;
         });
 
         confirmBtn.addEventListener('click', () => {
