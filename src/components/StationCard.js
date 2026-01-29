@@ -11,6 +11,9 @@ export function createStationCard(station, isMonitored, onToggleMonitor, thresho
         // MONITORED VIEW: Expanded with Threshold Input
         div.style.borderLeft = "4px solid #ef4444";
         div.style.backgroundColor = "#fff1f2"; // Light red tint
+        // Fix for .station-item flex row: Force column layout for detailed view
+        div.style.flexDirection = "column";
+        div.style.alignItems = "stretch";
 
         div.innerHTML = `
         <div style="margin-bottom: 0.5rem;">
