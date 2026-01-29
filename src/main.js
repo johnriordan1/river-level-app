@@ -264,6 +264,12 @@ function persistState() {
 }
 
 // --- Search Listener ---
+if (countyFilter) {
+  countyFilter.addEventListener('change', () => {
+    renderStationList();
+  });
+}
+
 searchInput.addEventListener('input', () => {
   renderStationList();
 });
