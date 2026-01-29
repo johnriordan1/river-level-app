@@ -1,4 +1,4 @@
-export function createStationCard(station, isMonitored, onToggleMonitor, threshold = 1.0, onThresholdChange = null) {
+export function createStationCard(station, isMonitored, onToggleMonitor, threshold = 1.0, onThresholdChange = null, currentLevel = null) {
     const div = document.createElement('div');
     div.className = 'card station-item';
     div.dataset.id = station.properties.ref;
@@ -62,10 +62,12 @@ export function createStationCard(station, isMonitored, onToggleMonitor, thresho
         });
 
     } else {
-        // SEARCH RESULT VIEW: Compact
+        // SEARCH RESULT VIEW: Compact but with Level
+        const levelDisplay = currentLevel !== null ? `${currentLevel.toFixed(2)}m` : 'N/A';
         div.innerHTML = `
-        <div>
+        <div style="flex: 1;">
           <div class="station-name">${name}</div>
+          <div style="font-size: 0.9rem; color: #64748b; margin-top: 0.25rem;">Level: <strong>${levelDisplay}</strong></div>
         </div>
         <div style="text-align: right;">
             <button class="btn btn-sm action-btn" style="padding: 0.4rem 1rem; background-color: #0ea5e9;">

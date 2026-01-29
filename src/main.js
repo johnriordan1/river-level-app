@@ -224,7 +224,9 @@ function renderStationList() {
   const toRender = filtered.slice(0, 50);
 
   toRender.forEach(station => {
-    const card = createStationCard(station, false, toggleMonitor);
+    const levelData = stationDataCache[station.properties.ref];
+    const currentLevel = levelData ? levelData.value : null;
+    const card = createStationCard(station, false, toggleMonitor, 1.0, null, currentLevel);
     stationListEl.appendChild(card);
   });
 
