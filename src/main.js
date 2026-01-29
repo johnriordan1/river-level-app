@@ -153,24 +153,25 @@ function renderMonitoredList() {
 }
 
 // 2. Search Results List (Bottom)
-// 2. Search Results List (Bottom)
 function renderStationList() {
   stationListEl.innerHTML = '';
 
+  // Check valid list
   if (!allStations || allStations.length === 0) {
     stationListEl.innerHTML = '<p style="text-align:center">No stations loaded.</p>';
     return;
   }
 
   // Filter: Exclude monitored stations AND match search query
-  const query = (searchInput.value || "").trim().toLowerCase();
+  const rawQuery = searchInput.value;
+  const query = (rawQuery || "").trim().toLowerCase();
 
   const filtered = allStations.filter(s => {
     // If monitored, don't show in search list
     if (monitoredStations.has(s.properties.ref)) return false;
 
-    // Search Filter
-    if (!query) return true;
+    // Search Filter: If query empty, SHOW ALL
+    if (query.length === 0) return true;
 
     // Safe access to properties
     const name = (s.properties.name || '').toLowerCase();
@@ -207,24 +208,23 @@ function renderStationList() {
 
 // Toggle Monitor (Add/Remove)
 function toggleMonitor(station) {
-  // Silent unlock audio
-  alarmSystem.unlock();
+  // Silent unlock audio (Safe Wrap)
+  try {
+    if (alarmSystem) alarmSystem.unlock();
+  } catch (e) {
+    console.warn("Audio unlock failed", e);
+  }
 
   const ref = station.properties.ref;
 
   if (monitoredStations.has(ref)) {
     // REMOVE (Stop Alarm)
     monitoredStations.delete(ref);
-    // If alarm was ringing for this one, silence it?
-    // Actually, we usually check all alarms. 
-    // But user said "The text box is then cleared" -> No, that's for adding.
-    // User said "The alarm is stopped by pressing the monitor button".
-    // So if we remove it, we should re-evaluate alarms.
   } else {
     // ADD
     monitoredStations.set(ref, { threshold: 1.0 }); // Default 1.0m
     // Clear search
-    searchInput.value = '';
+    if (searchInput) searchInput.value = '';
   }
 
   persistState();
