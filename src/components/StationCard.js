@@ -31,9 +31,11 @@ export function createStationCard(station, isMonitored, onToggleMonitor, thresho
             </div>
         </div>
 
-        <button class="btn btn-sm action-btn" style="width: 100%; margin-top: 1rem; background-color: #ef4444; color: white; padding: 0.3rem; font-size: 0.85rem;">
-            Stop Monitoring
-        </button>
+        <div style="text-align: center; margin-top: 1rem;">
+            <button class="btn btn-sm action-btn" style="background-color: #ef4444; color: white; padding: 0.3rem 0.8rem; font-size: 0.85rem;">
+                Stop Monitoring
+            </button>
+        </div>
         `;
 
         // Threshold Change Listener
