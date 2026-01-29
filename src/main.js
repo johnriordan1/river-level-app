@@ -1,11 +1,7 @@
 import './style.css';
 import { fetchStations, fetchStationData, fetchLatestReadings } from './api/opw.js';
 import { alarmSystem } from './utils/audio.js';
-import { inject } from '@vercel/analytics';
 import { createStationCard, updateStationLevelDOM } from './components/StationCard.js';
-
-// Initialize Analytics
-inject();
 
 // State
 let allStations = [];
