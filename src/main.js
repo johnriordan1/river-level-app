@@ -40,7 +40,7 @@ let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  if (installBtn) installBtn.style.display = 'inline-block';
+  // if (installBtn) installBtn.style.display = 'inline-block'; // Hidden by user request
 });
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
