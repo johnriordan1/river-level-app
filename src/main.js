@@ -101,7 +101,8 @@ async function init() {
 
   // Start Polling
   monitorLoop();
-  setInterval(monitorLoop, 5000);
+  // Poll every 5 minutes (300s). OPW updates every 15 mins, so this is plenty frequent.
+  setInterval(monitorLoop, 300000);
 }
 
 function populateCounties() {

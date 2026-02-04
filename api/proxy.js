@@ -16,6 +16,9 @@ export default async function handler(request, response) {
         response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
         response.setHeader('Content-Type', 'application/json');
 
+        // Caching: Cache at Edge for 5 minutes (300s), allowing stale while revalidating for another 60s
+        response.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
+
         if (!apiResponse.ok) {
             return response.status(apiResponse.status).json({ error: apiResponse.statusText });
         }
