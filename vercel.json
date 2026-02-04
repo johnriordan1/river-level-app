@@ -1,15 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/api/showcase",
-      "destination": "/api/showcase"
-    },
-    {
       "source": "/api/:match*",
       "destination": "/api/proxy?path=:match*"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/.*|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],
