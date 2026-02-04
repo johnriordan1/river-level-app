@@ -124,32 +124,20 @@ function populateCounties() {
 }
 
 // Data Processing
-// State
-let lastDataTimestamp = null;
-
-latestData.forEach(feature => {
-  const props = feature.properties;
-  if ((props.station_id || props.station_ref) && props.sensor_ref === "0001") {
-    const ref = props.station_ref || props.station_id;
-    const val = parseFloat(props.value);
-    if (!isNaN(val)) {
-      stationDataCache[ref] = {
-        value: val,
-        timestamp: props.datetime
-      };
-
-      // Track the global latest timestamp
-      if (props.datetime) {
-        const ts = new Date(props.datetime).getTime();
-        if (!lastDataTimestamp || ts > lastDataTimestamp) {
-          lastDataTimestamp = ts;
-        }
+function processLatestData(latestData) {
+  latestData.forEach(feature => {
+    const props = feature.properties;
+    if ((props.station_id || props.station_ref) && props.sensor_ref === "0001") {
+      const ref = props.station_ref || props.station_id;
+      const val = parseFloat(props.value);
+      if (!isNaN(val)) {
+        stationDataCache[ref] = {
+          value: val,
+          timestamp: props.datetime
+        };
       }
     }
-  }
-});
-
-return lastDataTimestamp;
+  });
 }
 
 // --- Rendering ---
