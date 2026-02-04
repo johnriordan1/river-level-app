@@ -223,8 +223,8 @@ function renderStationList() {
     const ref = (s.properties.ref || '').toLowerCase();
     const river = (s.properties.river || '').toLowerCase();
 
-    // Check match (Name, Ref, or River)
-    return name.includes(query) || ref.includes(query) || river.includes(query);
+    // Check match (Name or Ref only to avoid confusion)
+    return name.includes(query) || ref.includes(query);
   });
 
   if (filtered.length === 0) {
