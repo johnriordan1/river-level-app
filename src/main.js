@@ -101,7 +101,7 @@ async function init() {
 
   // Start Polling
   monitorLoop();
-  setInterval(monitorLoop, 300000); // 5 minutes
+  setInterval(monitorLoop, 150000); // 2.5 minutes
 }
 
 function populateCounties() {
