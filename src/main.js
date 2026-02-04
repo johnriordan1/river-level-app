@@ -101,8 +101,7 @@ async function init() {
 
   // Start Polling
   monitorLoop();
-  // Poll every 5 minutes (300s). OPW updates every 15 mins, so this is plenty frequent.
-  setInterval(monitorLoop, 300000);
+  setInterval(monitorLoop, 300000); // 5 minutes
 }
 
 function populateCounties() {
@@ -323,15 +322,15 @@ if (searchInput) {
 }
 
 // --- Monitoring & Alarm Logic ---
-
 let pollingTimer = null;
 
 async function monitorLoop() {
+  // console.log('Checking levels...');
   try {
     const latestData = await fetchLatestReadings();
-    const dataTimestamp = processLatestData(latestData);
+    processLatestData(latestData);
 
-    // Update DOM
+    // Update DOM for monitored stations
     monitoredStations.forEach((_, ref) => {
       if (stationDataCache[ref]) {
         updateStationLevelDOM(ref, stationDataCache[ref].value, false);
@@ -340,46 +339,9 @@ async function monitorLoop() {
 
     checkAlarms();
 
-    // --- Smart Polling Logic ---
-    scheduleNextPoll(dataTimestamp);
-
   } catch (e) {
     console.error("Monitor loop failed", e);
-    // On error, retry in 1 minute
-    pollingTimer = setTimeout(monitorLoop, 60000);
   }
-}
-
-function scheduleNextPoll(dataTimestamp) {
-  // Default: 5 minutes if no data
-  let delay = 300000;
-
-  if (dataTimestamp) {
-    const now = Date.now();
-    const ageMs = now - dataTimestamp;
-    const ageMins = ageMs / 60000;
-
-    // OPW updates roughly every 15 mins (00, 15, 30, 45 or offset)
-    // If data is "fresh" (e.g. < 12 mins old), we can relax.
-    // If data is "stale" (e.g. > 12 mins old), an update is due soon -> Poll faster.
-
-    if (ageMins < 13) {
-      // Data is fresh. Wait until it's about 13-14 mins old before checking again.
-      // Example: Data is 5 mins old. We want to check at 14 mins old. Wait 9 mins.
-      // Buffer: 1 min safety.
-      const waitMins = 14 - ageMins;
-      delay = waitMins * 60000;
-      if (delay < 30000) delay = 30000; // Minimum 30s
-      console.log(`Data is ${ageMins.toFixed(1)}m old. Relaxing. Next check in ${waitMins.toFixed(1)}m.`);
-    } else {
-      // Data is > 13 mins old. Update is imminent. Poll fast.
-      delay = 30000; // 30 seconds
-      console.log(`Data is ${ageMins.toFixed(1)}m old. Update imminent! Polling every 30s.`);
-    }
-  }
-
-  if (pollingTimer) clearTimeout(pollingTimer);
-  pollingTimer = setTimeout(monitorLoop, delay);
 }
 
 function checkAlarms() {

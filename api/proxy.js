@@ -16,10 +16,10 @@ export default async function handler(request, response) {
         response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
         response.setHeader('Content-Type', 'application/json');
 
-        // Caching: Cache at Edge for 30 seconds.
-        // This is short enough that when our app decides to "burst poll" every 30s,
-        // it gets relatively fresh data, but still protects the origin slightly.
-        response.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+        // Caching: Cache at Edge for 5 minutes (300s).
+        // This ensures thousands of users hitting the site share the SAME response,
+        // saving Function Invocations.
+        response.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
 
         if (!apiResponse.ok) {
             return response.status(apiResponse.status).json({ error: apiResponse.statusText });
