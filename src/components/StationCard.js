@@ -36,7 +36,7 @@ export function createStationCard(station, isMonitored, onToggleMonitor, thresho
         </div>
 
         <div style="text-align: center; margin-top: 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-            <button class="confirm-btn" style="display: none; background-color: #22c55e; color: white; padding: 0.8rem 2rem; font-size: 1rem; width: 80%; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
+            <button class="confirm-btn" style="display: none; background-color: #22c55e; color: white; padding: 0.8rem 2rem; font-size: 1rem; width: 80%; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">
                 Confirm
             </button> <!-- Moved here and styled to match Stop button -->
             
