@@ -10,7 +10,8 @@ function getUrl(path) {
         // In production, use the absolute serverless proxy URL
         // This allows 'npm run preview' or local builds to work by hitting the live proxy
         const cleanPath = path.replace(/^\/api\//, '');
-        return `https://river-level-app.vercel.app/api/proxy?path=${cleanPath}`;
+        // Updated URL per user request
+        return `https://water-level-app.vercel.app/api/proxy?path=${cleanPath}`;
     }
     // In dev, use the vite proxy path directly
     return path;
