@@ -30,7 +30,7 @@ export function createStationCard(station, isMonitored, onToggleMonitor, thresho
                  <label style="font-size: 0.75rem; color: #64748b; display: block;">Alarm Limit (m)</label>
                  
                  <input type="number" class="threshold-input" 
-                    value="${threshold}" min="0.5" max="5.0" step="0.1" 
+                    value="${threshold}" min="0.5" max="10.0" step="0.1" 
                     style="width: 100%; max-width: 120px; padding: 0.5rem; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; font-size: 1.1rem;">
             </div>
         </div>

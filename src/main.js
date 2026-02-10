@@ -258,9 +258,12 @@ function toggleMonitor(station) {
     monitoredStations.delete(ref);
   } else {
     // ADD
-    monitoredStations.set(ref, { threshold: 3 }); // Default 3m (User Request)
+    monitoredStations.set(ref, { threshold: 5 }); // Default 5m (User Request)
     // Clear search
     if (searchInput) searchInput.value = '';
+
+    // Scroll to top to see monitored section
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   persistState();
