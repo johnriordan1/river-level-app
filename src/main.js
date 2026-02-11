@@ -272,10 +272,6 @@ function toggleMonitor(station) {
   // Trigger wake lock check
   if (monitoredStations.size > 0) {
     requestWakeLock();
-    // Request Notification Permission
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
   } else {
     releaseWakeLock();
   }
@@ -369,20 +365,6 @@ function checkAlarms() {
       alarmSystem.ctx.resume();
     }
     alarmSystem.start();
-
-    // SHOW SYSTEM NOTIFICATION
-    if ('Notification' in window && Notification.permission === 'granted') {
-      // Simple debounce to avoid spamming 100 notifications
-
-      try {
-        new Notification("Flood Warning!", {
-          body: alarmMsg.replace(/<[^>]*>?/gm, ''), // Strip HTML tags
-          icon: '/pwa-192x192.png'
-        });
-      } catch (e) {
-        console.warn("Notification failed", e);
-      }
-    }
 
   } else {
     // Clear Alarm
