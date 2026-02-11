@@ -56,6 +56,49 @@ window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
 });
 
+// --- Debug / Test Features ---
+const debugBtn = document.createElement('button');
+debugBtn.innerText = "🔔 Test Alarm";
+debugBtn.className = "btn";
+debugBtn.style.cssText = "display: block; margin: 10px auto; background-color: #64748b;";
+document.querySelector('header').appendChild(debugBtn);
+
+debugBtn.addEventListener('click', async () => {
+  // 1. Audio
+  try {
+    if (alarmSystem.ctx && alarmSystem.ctx.state === 'suspended') alarmSystem.ctx.resume();
+    alarmSystem.start();
+    setTimeout(() => alarmSystem.stop(), 2000); // Stop after 2s
+  } catch (e) { alert("Audio Error: " + e.message); }
+
+  // 2. Vibrate
+  try {
+    if (!navigator.vibrate) alert("Vibration API not supported on this device.");
+    else {
+      const success = navigator.vibrate([500, 200, 500]);
+      if (!success) alert("Vibrate call returned false (blocked by user/system?)");
+    }
+  } catch (e) { alert("Vib Error: " + e.message); }
+
+  // 3. Notification
+  if (!('Notification' in window)) {
+    alert("System Notifications not supported.");
+  } else {
+    if (Notification.permission === 'granted') {
+      new Notification("Test Alarm", { body: "This is a test notification.", icon: '/pwa-192x192.png' });
+    } else if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        new Notification("Test Alarm", { body: "Thanks for enabling!", icon: '/pwa-192x192.png' });
+      } else {
+        alert("Notification Permission Denied.");
+      }
+    } else {
+      alert("Notifications are BLOCKED in browser settings.");
+    }
+  }
+});
+
 // --- Init ---
 async function init() {
   renderLoading();
