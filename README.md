@@ -9,7 +9,6 @@ A Progressive Web App (PWA) to monitor river levels in Ireland using realtime da
 *   **Realtime Data:** Fetches live water levels from over 400 OPW stations across Ireland.
 *   **Safety Alarms:** Set a custom threshold (e.g., 2.5m) for any station. If the water level exceeds this, an audible alarm will sound.
 *   **Progressive Web App (PWA):** Installable on mobile and desktop. Works offline (cached UI) and behaves like a native app.
-*   **Background Monitoring:** Uses the Wake Lock API to keep the screen on and monitoring active during storms.
 *   **Privacy First:** No tracking. All monitored stations and settings are stored locally on your device.
 
 ## 🛠️ Tech Stack
