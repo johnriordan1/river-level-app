@@ -428,8 +428,7 @@ function checkAlarms() {
     // SHOW SYSTEM NOTIFICATION
     if ('Notification' in window && Notification.permission === 'granted') {
       // Simple debounce to avoid spamming 100 notifications
-      // Only show if we haven't shown one in the last 60 seconds?
-      // For now, let's just trigger it. The browser usually groups them.
+    
       try {
         new Notification("Flood Warning!", {
           body: alarmMsg.replace(/<[^>]*>?/gm, ''), // Strip HTML tags
