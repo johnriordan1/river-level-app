@@ -357,11 +357,15 @@ function checkAlarms() {
             </div>`;
     }
 
-    // Play Sound
+    // Play Sound & Vibrate
     if (alarmSystem.ctx && alarmSystem.ctx.state === 'suspended') {
       alarmSystem.ctx.resume();
     }
     alarmSystem.start();
+
+    // Vibrate: Buzz-Pause-Buzz (Android only)
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+
   } else {
     // Clear Alarm
     if (alarmDisplay) alarmDisplay.innerHTML = '';
