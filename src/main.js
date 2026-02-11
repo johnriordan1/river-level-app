@@ -270,8 +270,15 @@ function toggleMonitor(station) {
   renderAll();
 
   // Trigger wake lock check
-  if (monitoredStations.size > 0) requestWakeLock();
-  else releaseWakeLock();
+  if (monitoredStations.size > 0) {
+    requestWakeLock();
+    // Request Notification Permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  } else {
+    releaseWakeLock();
+  }
 
   // Re-check alarms immediately
   checkAlarms();
@@ -370,11 +377,25 @@ function checkAlarms() {
         // Since we are playing audio (which was unlocked by user), this *should* work.
         const success = navigator.vibrate([1000, 500, 1000]);
         if (!success) console.warn("Vibration failed (returned false)");
-      } else {
-        console.log("Vibration API not supported");
       }
     } catch (e) {
       console.warn("Vibration error:", e);
+    }
+
+    // SHOW SYSTEM NOTIFICATION
+    if ('Notification' in window && Notification.permission === 'granted') {
+      // Simple debounce to avoid spamming 100 notifications
+      // Only show if we haven't shown one in the last 60 seconds?
+      // For now, let's just trigger it. The browser usually groups them.
+      try {
+        new Notification("Flood Warning!", {
+          body: alarmMsg.replace(/<[^>]*>?/gm, ''), // Strip HTML tags
+          icon: '/pwa-192x192.png',
+          vibrate: [200, 100, 200]
+        });
+      } catch (e) {
+        console.warn("Notification failed", e);
+      }
     }
 
   } else {
