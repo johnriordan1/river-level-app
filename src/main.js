@@ -56,49 +56,6 @@ window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
 });
 
-// --- Debug / Test Features ---
-const debugBtn = document.createElement('button');
-debugBtn.innerText = "🔔 Test Alarm";
-debugBtn.className = "btn";
-debugBtn.style.cssText = "display: block; margin: 10px auto; background-color: #64748b;";
-document.querySelector('header').appendChild(debugBtn);
-
-debugBtn.addEventListener('click', async () => {
-  // 1. Audio
-  try {
-    if (alarmSystem.ctx && alarmSystem.ctx.state === 'suspended') alarmSystem.ctx.resume();
-    alarmSystem.start();
-    setTimeout(() => alarmSystem.stop(), 2000); // Stop after 2s
-  } catch (e) { alert("Audio Error: " + e.message); }
-
-  // 2. Vibrate
-  try {
-    if (!navigator.vibrate) alert("Vibration API not supported on this device.");
-    else {
-      const success = navigator.vibrate([500, 200, 500]);
-      if (!success) alert("Vibrate call returned false (blocked by user/system?)");
-    }
-  } catch (e) { alert("Vib Error: " + e.message); }
-
-  // 3. Notification
-  if (!('Notification' in window)) {
-    alert("System Notifications not supported.");
-  } else {
-    if (Notification.permission === 'granted') {
-      new Notification("Test Alarm", { body: "This is a test notification.", icon: '/pwa-192x192.png' });
-    } else if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        new Notification("Test Alarm", { body: "Thanks for enabling!", icon: '/pwa-192x192.png' });
-      } else {
-        alert("Notification Permission Denied.");
-      }
-    } else {
-      alert("Notifications are BLOCKED in browser settings.");
-    }
-  }
-});
-
 // --- Init ---
 async function init() {
   renderLoading();
@@ -407,33 +364,20 @@ function checkAlarms() {
             </div>`;
     }
 
-    // Play Sound & Vibrate
+    // Play Sound
     if (alarmSystem.ctx && alarmSystem.ctx.state === 'suspended') {
       alarmSystem.ctx.resume();
     }
     alarmSystem.start();
 
-    // Vibrate: Stronger Pattern (1s buzz - 0.5s pause - 1s buzz)
-    try {
-      if (navigator.vibrate) {
-        // Some browsers require user interaction immediately before vibration.
-        // Since we are playing audio (which was unlocked by user), this *should* work.
-        const success = navigator.vibrate([1000, 500, 1000]);
-        if (!success) console.warn("Vibration failed (returned false)");
-      }
-    } catch (e) {
-      console.warn("Vibration error:", e);
-    }
-
     // SHOW SYSTEM NOTIFICATION
     if ('Notification' in window && Notification.permission === 'granted') {
       // Simple debounce to avoid spamming 100 notifications
-    
+
       try {
         new Notification("Flood Warning!", {
           body: alarmMsg.replace(/<[^>]*>?/gm, ''), // Strip HTML tags
-          icon: '/pwa-192x192.png',
-          vibrate: [200, 100, 200]
+          icon: '/pwa-192x192.png'
         });
       } catch (e) {
         console.warn("Notification failed", e);
