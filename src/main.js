@@ -363,8 +363,19 @@ function checkAlarms() {
     }
     alarmSystem.start();
 
-    // Vibrate: Buzz-Pause-Buzz (Android only)
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    // Vibrate: Stronger Pattern (1s buzz - 0.5s pause - 1s buzz)
+    try {
+      if (navigator.vibrate) {
+        // Some browsers require user interaction immediately before vibration.
+        // Since we are playing audio (which was unlocked by user), this *should* work.
+        const success = navigator.vibrate([1000, 500, 1000]);
+        if (!success) console.warn("Vibration failed (returned false)");
+      } else {
+        console.log("Vibration API not supported");
+      }
+    } catch (e) {
+      console.warn("Vibration error:", e);
+    }
 
   } else {
     // Clear Alarm
