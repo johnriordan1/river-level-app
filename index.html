@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/pwa-192x192.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPW Realtime Water Levels</title>
+  <meta name="description" content="Monitor river levels and get alerts for rising water." />
+  <script>
+    window.va = window.va || function () { (window.va.q = window.va.q || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <div class="container">
+      <header class="header">
+        <h1 class="title" style="text-align: center;">OPW Realtime Water Levels</h1>
+
+        <div style="text-align: center; margin-top: 0.5rem;">
+          <button id="install-btn" class="btn"
+            style="display: none; max-width: 220px; background-color: var(--primary-color); margin: 0 auto;">⬇️
+            Install App</button>
+        </div>
+      </header>
+
+      <!-- iOS Installation Steps Bottom Sheet -->
+      <div id="ios-install-overlay" class="ios-install-overlay"></div>
+      <div id="ios-install-sheet" class="ios-install-sheet">
+        <div class="ios-install-header">
+          <span class="ios-install-title">Install River Alert Ireland</span>
+          <button id="ios-install-close" class="ios-install-close">&times;</button>
+        </div>
+        <div class="ios-install-steps">
+          <div class="ios-install-step">
+            <span class="ios-install-icon">1️⃣</span>
+            <span>Tap the <strong>Share</strong> button <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#0ea5e9" viewBox="0 0 24 24" style="vertical-align: middle; margin: 0 2px;"><path d="M16 5l-1.42 1.42L18.16 10H8v2h10.16l-3.58 3.58L16 17l6-6-6-6zM4 20h14v-4h2v6H2V4h8v2H4v14z"/></svg> at the bottom/top of Safari.</span>
+          </div>
+          <div class="ios-install-step">
+            <span class="ios-install-icon">2️⃣</span>
+            <span>Scroll down and select <strong>Add to Home Screen</strong>.</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="alarm-display" style="text-align: center; margin-bottom: 1rem; min-height: 1.5rem;"></div>
+
+      <!-- Monitored Stations Section -->
+      <section id="monitored-section" style="margin-bottom: 2rem; display: none;">
+        <h2 style="font-size: 1.2rem; margin-bottom: 1rem; color: #1e293b; text-align: center;">Monitored Stations</h2>
+        <div id="monitored-list" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Monitored cards go here -->
+        </div>
+      </section>
+
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 2rem 0;">
+
+      <!-- Search Section -->
+      <section id="search-section">
+        <h2 style="font-size: 1.2rem; margin-bottom: 1rem; color: #1e293b; text-align: center;">Find a Station Search
+        </h2>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <select id="county-filter"
+            style="padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; flex: 1; min-width: 0;">
+            <option value="">All Counties</option>
+          </select>
+          <input type="text" id="station-search" placeholder="Type name..."
+            style="flex: 2; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; min-width: 0;">
+        </div>
+
+        <div id="station-list">
+          <!-- Filtered list goes here -->
+          <p style="color: var(--text-secondary); text-align: center;">Loading stations...</p>
+        </div>
+      </section>
+
+      <footer
+        style="margin-top: 3rem; margin-bottom: 2rem; padding: 1rem; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #94a3b8; text-align: center; line-height: 1.5;">
+        <p>
+          Data provided by <a href="https://waterlevel.ie" target="_blank"
+            style="color: #64748b; text-decoration: underline;">OPW</a>.<br>
+          <span style="font-size: 0.65rem; opacity: 0.8;">Contains Irish Public Sector Data licensed under a <a
+              href="https://creativecommons.org/licenses/by/4.0/" target="_blank"
+              style="color: inherit; text-decoration: underline;">CC BY 4.0</a> licence.</span>
+        </p>
+        <p style="margin-top: 0.5rem;">
+          <strong>Disclaimer:</strong> This app is for informational purposes only. <br>
+          Do not rely solely on this tool for safety-critical decisions. <br>
+          The developer accepts no liability for data accuracy or service availability.
+        </p>
+        <p style="margin-top: 0.5rem;">
+          <a href="#" id="privacy-link" style="color: #64748b; text-decoration: underline;">Privacy Policy</a> &bull;
+          Created by <a href="https://john-riordan.ie" target="_blank"
+            style="color: #64748b; text-decoration: underline;">John Riordan</a>
+        </p>
+        <p style="margin-top: 1rem;">
+          <a href="https://github.com/johnriordan1/river-level-app" target="_blank" aria-label="View Source on GitHub"
+            style="color: #94a3b8; text-decoration: none; display: inline-block; transition: color 0.2s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+              <path
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+            </svg>
+          </a>
+        </p>
+      </footer>
+    </div>
+
+    <!-- Custom Privacy Modal -->
+    <div id="privacy-modal"
+      style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+      <div
+        style="background: white; padding: 2rem; border-radius: 12px; max-width: 90%; width: 500px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); position: relative;">
+        <button id="close-modal"
+          style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">&times;</button>
+        <h2 style="margin-bottom: 1rem; font-size: 1.5rem; color: #0f172a;">Privacy Policy</h2>
+        <div style="font-size: 0.9rem; line-height: 1.6; color: #334155;">
+          <p style="margin-bottom: 0.8rem;"><strong>1. No Personal Data:</strong> We do not collect names, emails, or
+            precise location data.</p>
+          <p style="margin-bottom: 0.8rem;"><strong>2. Local Storage:</strong> Your station preferences and alarm
+            settings are stored securely on your own device (via LocalStorage), whether used on the web or as an
+            installed app.</p>
+          <p style="margin-bottom: 0.8rem;"><strong>3. Analytics:</strong> We use anonymous performance analytics
+            (Vercel) to check if the site is online and working correctly.</p>
+          <p style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;"><strong>Contact:</strong> <a
+              href="mailto:john@john-riordan.ie" style="color: #0ea5e9;">john@john-riordan.ie</a></p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+    <script>
+      const modal = document.getElementById('privacy-modal');
+      const privacyLink = document.getElementById('privacy-link');
+      const closeBtn = document.getElementById('close-modal');
+
+      // Open Modal
+      privacyLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.style.display = 'flex';
+      });
+
+      // Close Modal (X button)
+      closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+
+      // Close Modal (Click outside)
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    </script>
+</body>
+
+</html>
