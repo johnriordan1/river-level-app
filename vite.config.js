@@ -7,8 +7,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'River Alert Ireland',
-        short_name: 'RiverAlert',
+        name: 'Water Levels',
+        short_name: 'WaterLevels',
         description: 'Real-time river level warnings for Ireland',
         theme_color: '#ffffff',
         icons: [
